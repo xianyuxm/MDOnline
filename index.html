@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Stable Diffusion Forge API 文档中心" />
+  <title>MDOnline - Markdown 文档站点</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./vue.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <script>
+    // 自动检测 basePath：兼容本地开发 (/) 和 Nginx 子路径部署 (/apidocs/)
+    (function () {
+      var path = window.location.pathname;
+      window.$$docsifyBasePath = path.replace(/(?:\/index\.html)?\/?$/, '/') || '/';
+    })();
+
+    window.$docsify = {
+      name: 'MDOnline',
+      basePath: window.$$docsifyBasePath,
+      homepage: 'docs/目录1/测试文档1.md',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      coverpage: false,
+      onlyCover: false,
+      search: {
+        paths: 'auto',
+        maxAge: 0,
+        depth: 4,
+        noData: '没有找到相关内容',
+        placeholder: '搜索接口、流程、状态码'
+      },
+      plugins: [
+        function collapsibleSidebar(hook) {
+          hook.doneEach(function () {
+            document.querySelectorAll('.sidebar-nav li').forEach(function (item) {
+              var childList = item.querySelector(':scope > ul');
+              var trigger = item.querySelector(':scope > p, :scope > a');
+
+              if (!childList || !trigger || trigger.dataset.collapseBound === 'true') {
+                return;
+              }
+
+              trigger.dataset.collapseBound = 'true';
+              trigger.classList.add('sidebar-collapse-trigger');
+              trigger.setAttribute('role', 'button');
+              trigger.setAttribute('tabindex', '0');
+
+              trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                item.classList.toggle('sidebar-group-collapsed');
+              });
+
+              trigger.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  item.classList.toggle('sidebar-group-collapsed');
+                }
+              });
+            });
+          });
+        },
+
+        // ── 主题切换插件 ──
+        function themeSwitcher(hook) {
+          var STORAGE_KEY = 'docsify-theme';
+
+          function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem(STORAGE_KEY, theme);
+            updateButton(theme);
+          }
+
+          function updateButton(theme) {
+            var btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            if (theme === 'light') {
+              btn.className = 'icon-moon';
+              btn.title = '切换为暗黑模式';
+            } else {
+              btn.className = 'icon-sun';
+              btn.title = '切换为浅色模式';
+            }
+          }
+
+          hook.mounted(function () {
+            // 创建浮动按钮
+            var btn = document.createElement('button');
+            btn.id = 'theme-toggle';
+            document.body.appendChild(btn);
+
+            // 读取存储的主题（默认暗黑）
+            var saved = localStorage.getItem(STORAGE_KEY) || 'dark';
+            applyTheme(saved);
+
+            // 点击切换
+            btn.addEventListener('click', function () {
+              var current = document.documentElement.getAttribute('data-theme') || 'dark';
+              applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+          });
+
+          // 每次页面路由切换后重新检查按钮状态
+          hook.doneEach(function () {
+            var current = document.documentElement.getAttribute('data-theme') || 'dark';
+            updateButton(current);
+          });
+        }
+      ]
+    };
+  </script>
+</head>
+<body>
+  <div id="app">加载文档中...</div>
+  <script src="./docsify.min.js"></script>
+  <script src="./search.min.js"></script>
+</body>
+</html>

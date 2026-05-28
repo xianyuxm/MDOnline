@@ -1,0 +1,610 @@
+:root {
+  --theme-color: #22d3ee;
+  --theme-color-dim: #0e7490;
+  --sidebar-background: #0a0c12;
+  --sidebar-border-color: #1a1e2e;
+  --sidebar-name-color: #f1f5f9;
+  --sidebar-link-color: #94a3b8;
+  --sidebar-link-hover-color: #e2e8f0;
+  --sidebar-link-hover-background: #111827;
+  --content-background: #0f1117;
+  --card-background: #161922;
+  --text-color-base: #e2e8f0;
+  --text-color-secondary: #94a3b8;
+  --heading-color: #f1f5f9;
+  --code-theme-background: #1a1d27;
+  --code-theme-text: #cdd6f4;
+  --border-color: #2a3040;
+  --accent-glow: rgba(34, 211, 238, 0.15);
+}
+
+/* ── 全局 ── */
+html, body {
+  margin: 0;
+  background: var(--content-background);
+  color: var(--text-color-base);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── 自定义滚动条 ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a3040; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4050; }
+
+/* ── 侧边栏 ── */
+.sidebar {
+  border-right: 1px solid var(--sidebar-border-color);
+  background: var(--sidebar-background);
+}
+
+.sidebar .app-name {
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid var(--sidebar-border-color);
+  background: linear-gradient(135deg, #0e7490 0%, #0a0c12 60%);
+}
+
+.sidebar .app-name-link {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--sidebar-name-color);
+  letter-spacing: 0.3px;
+}
+
+.sidebar ul li a {
+  padding: 7px 14px;
+  border-radius: 6px;
+  margin: 2px 10px;
+  color: var(--sidebar-link-color);
+  transition: color 0.15s, background 0.15s;
+}
+
+.sidebar ul li a:hover {
+  color: var(--sidebar-link-hover-color);
+  background: var(--sidebar-link-hover-background);
+  text-decoration: none;
+}
+
+/* ── 侧边栏折叠触发器 ── */
+.sidebar ul li > p.sidebar-collapse-trigger,
+.sidebar ul li > a.sidebar-collapse-trigger {
+  position: relative;
+  display: block;
+  padding: 9px 36px 9px 14px;
+  border-radius: 6px;
+  margin: 4px 10px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0e7490, #0891b2);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(14, 116, 144, 0.25);
+}
+
+.sidebar ul li > p.sidebar-collapse-trigger:hover,
+.sidebar ul li > a.sidebar-collapse-trigger:hover {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0891b2, #22d3ee);
+  box-shadow: 0 2px 12px rgba(34, 211, 238, 0.35);
+  text-decoration: none;
+}
+
+.sidebar ul li > .sidebar-collapse-trigger::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.sidebar ul li.sidebar-group-collapsed > .sidebar-collapse-trigger::after {
+  transform: translateY(-35%) rotate(-45deg);
+}
+
+.sidebar ul li.sidebar-group-collapsed > ul {
+  display: none;
+}
+
+/* ── 侧边栏激活项 ── */
+.sidebar ul li.active > a {
+  color: var(--theme-color);
+  background: var(--sidebar-link-hover-background);
+  border-right: 2px solid var(--theme-color);
+  font-weight: 600;
+}
+
+/* ── 搜索框 ── */
+.sidebar .search {
+  border-bottom: 1px solid var(--sidebar-border-color);
+  padding-bottom: 8px;
+}
+
+.sidebar .search input {
+  margin: 14px 10px 4px;
+  width: calc(100% - 20px);
+  border-radius: 6px;
+  border: 1px solid #1e293b;
+  background: #111318;
+  color: #e2e8f0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sidebar .search input:focus {
+  border-color: var(--theme-color-dim);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+  outline: none;
+}
+
+.sidebar .search input::placeholder {
+  color: #64748b;
+}
+
+.sidebar .search .search-result-item {
+  color: var(--sidebar-link-color);
+}
+
+/* ── 内容区 ── */
+.content {
+  max-width: 1180px;
+  padding: 28px 32px 52px;
+  background: var(--content-background);
+}
+
+.markdown-section {
+  max-width: 980px;
+  color: var(--text-color-base);
+}
+
+/* ── 标题 + 粗体 ── */
+.markdown-section h1,
+.markdown-section h2,
+.markdown-section h3,
+.markdown-section h4,
+.markdown-section strong {
+  color: var(--heading-color);
+  font-weight: 700;
+}
+
+.markdown-section h1 {
+  font-size: 2em;
+  margin-top: 0;
+  padding-bottom: 0.4em;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.markdown-section h2 {
+  font-size: 1.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #3d4556;
+}
+
+.markdown-section h3 {
+  font-size: 1.35em;
+  margin: 2em 0 0.8em;
+  padding: 6px 0 4px 12px;
+  border-left: 3px solid var(--theme-color);
+  background: linear-gradient(90deg, rgba(34,211,238,0.06) 0%, transparent 60%);
+}
+
+.markdown-section h4 {
+  font-size: 1.15em;
+  margin: 1.5em 0 0.6em;
+  color: #cbd5e1;
+}
+
+/* ── 文本 ── */
+.markdown-section p,
+.markdown-section li,
+.markdown-section table {
+  line-height: 1.8;
+  color: var(--text-color-base);
+}
+
+/* 覆盖 vue.css 的深色文字 */
+.markdown-section em {
+  color: #cbd5e1;
+}
+
+.markdown-section blockquote {
+  border-left: 3px solid var(--theme-color);
+  background: var(--card-background);
+  color: var(--text-color-secondary);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.markdown-section blockquote p {
+  color: var(--text-color-secondary);
+  font-weight: 400;
+}
+
+/* ── 链接 ── */
+.markdown-section a {
+  color: var(--theme-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.markdown-section a:hover {
+  color: #67e8f9;
+  border-bottom-color: #67e8f9;
+}
+
+/* ── 行内代码 ── */
+.markdown-section code {
+  background: #1a1d27;
+  color: #22d3ee;
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.9em;
+  border: 1px solid #2a3040;
+}
+
+/* ── 代码块 ── */
+.markdown-section pre {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--code-theme-background);
+  padding: 16px 20px;
+  overflow-x: auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.markdown-section pre > code {
+  background: transparent;
+  color: var(--code-theme-text);
+  border: none;
+  padding: 0;
+  font-size: 0.88em;
+  line-height: 1.6;
+}
+
+/* ── 表格 ── */
+.markdown-section table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #3d4556;
+  background: #1c2030;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.markdown-section th,
+.markdown-section td {
+  border: 1px solid #3d4556;
+  padding: 12px 16px;
+  color: #f1f5f9;
+  font-size: 0.94em;
+  line-height: 1.65;
+}
+
+.markdown-section thead th {
+  background: #222838;
+  color: var(--theme-color);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: none;
+  border-bottom: 2px solid #3d4556;
+}
+
+/* 奇偶行区分 */
+.markdown-section tbody tr:nth-child(odd) {
+  background: #1c2030;
+}
+.markdown-section tbody tr:nth-child(even) {
+  background: #232a3a;
+}
+
+/* 行悬停 */
+.markdown-section tbody tr:hover {
+  background: rgba(34, 211, 238, 0.10);
+}
+
+/* 表格内行内代码 */
+.markdown-section td code {
+  background: #0f1117;
+  color: #22d3ee;
+  border-color: #3d4556;
+}
+
+/* ── 标题锚点图标 ── */
+.markdown-section .anchor span {
+  color: var(--theme-color);
+  transition: color 0.2s;
+}
+
+.markdown-section .anchor:hover span {
+  color: #67e8f9;
+}
+
+/* ── 分隔线 ── */
+.markdown-section hr {
+  border-color: var(--border-color);
+  margin: 24px 0;
+}
+
+/* ── 图片 ── */
+.markdown-section img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Docsify 主题覆盖 ── */
+body .sidebar-toggle {
+  background: var(--card-background);
+  border-color: var(--border-color);
+}
+
+body .sidebar-toggle-button {
+  color: var(--text-color-secondary);
+}
+
+/* ── 加载动画 ── */
+#app {
+  color: var(--text-color-secondary);
+}
+
+/* ── 响应式 ── */
+@media (max-width: 768px) {
+  .content {
+    padding: 18px 16px 36px;
+  }
+}
+
+/* ══════════════════════════════════════
+   浅色主题
+   ══════════════════════════════════════ */
+[data-theme="light"] {
+  --theme-color: #0891b2;
+  --theme-color-dim: #0e7490;
+  --sidebar-background: #f8fafc;
+  --sidebar-border-color: #e2e8f0;
+  --sidebar-name-color: #0f172a;
+  --sidebar-link-color: #475569;
+  --sidebar-link-hover-color: #1e293b;
+  --sidebar-link-hover-background: #f1f5f9;
+  --content-background: #ffffff;
+  --card-background: #f8fafc;
+  --text-color-base: #334155;
+  --text-color-secondary: #64748b;
+  --heading-color: #0f172a;
+  --code-theme-background: #f1f5f9;
+  --code-theme-text: #334155;
+  --border-color: #e2e8f0;
+  --accent-glow: rgba(8, 145, 178, 0.12);
+}
+
+/* ── 浅色：全局 ── */
+[data-theme="light"] html,
+[data-theme="light"] body {
+  background: #ffffff;
+  color: var(--text-color-base);
+}
+
+/* ── 浅色：滚动条 ── */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── 浅色：侧边栏 ── */
+[data-theme="light"] .sidebar .app-name {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f8fafc 60%);
+}
+
+/* ── 浅色：折叠触发器 ── */
+[data-theme="light"] .sidebar ul li > p.sidebar-collapse-trigger,
+[data-theme="light"] .sidebar ul li > a.sidebar-collapse-trigger {
+  color: #0e7490;
+  background: linear-gradient(135deg, #e0f2fe, #cffafe);
+  box-shadow: 0 2px 8px rgba(8, 145, 178, 0.15);
+}
+
+[data-theme="light"] .sidebar ul li > p.sidebar-collapse-trigger:hover,
+[data-theme="light"] .sidebar ul li > a.sidebar-collapse-trigger:hover {
+  color: #0f172a;
+  background: linear-gradient(135deg, #cffafe, #a5f3fc);
+  box-shadow: 0 2px 12px rgba(8, 145, 178, 0.25);
+}
+
+/* ── 浅色：搜索框 ── */
+[data-theme="light"] .sidebar .search input {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+}
+
+[data-theme="light"] .sidebar .search input::placeholder {
+  color: #94a3b8;
+}
+
+/* ── 浅色：内容区 ── */
+[data-theme="light"] .content {
+  background: #ffffff;
+}
+
+/* ── 浅色：标题 ── */
+[data-theme="light"] .markdown-section h2 {
+  border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] .markdown-section h3 {
+  border-left-color: var(--theme-color);
+  background: linear-gradient(90deg, rgba(8,145,178,0.06) 0%, transparent 60%);
+}
+
+[data-theme="light"] .markdown-section h4 {
+  color: #475569;
+}
+
+/* ── 浅色：文本 ── */
+[data-theme="light"] .markdown-section em {
+  color: #475569;
+}
+
+[data-theme="light"] .markdown-section blockquote {
+  background: var(--card-background);
+  color: var(--text-color-secondary);
+}
+
+[data-theme="light"] .markdown-section blockquote p {
+  color: var(--text-color-secondary);
+}
+
+/* ── 浅色：链接 ── */
+[data-theme="light"] .markdown-section a:hover {
+  color: #0e7490;
+  border-bottom-color: #0e7490;
+}
+
+/* ── 浅色：行内代码 ── */
+[data-theme="light"] .markdown-section code {
+  background: #f1f5f9;
+  color: #0891b2;
+  border-color: #e2e8f0;
+}
+
+/* ── 浅色：代码块 ── */
+[data-theme="light"] .markdown-section pre {
+  border-color: var(--border-color);
+  background: var(--code-theme-background);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .markdown-section pre > code {
+  color: var(--code-theme-text);
+}
+
+/* ── 浅色：表格 ── */
+[data-theme="light"] .markdown-section table {
+  border-color: #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .markdown-section th,
+[data-theme="light"] .markdown-section td {
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+[data-theme="light"] .markdown-section thead th {
+  background: #f1f5f9;
+  color: var(--theme-color);
+  border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] .markdown-section tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+[data-theme="light"] .markdown-section tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .markdown-section tbody tr:hover {
+  background: rgba(8, 145, 178, 0.08);
+}
+
+[data-theme="light"] .markdown-section td code {
+  background: #f1f5f9;
+  color: #0891b2;
+  border-color: #e2e8f0;
+}
+
+/* ── 浅色：锚点图标 ── */
+[data-theme="light"] .markdown-section .anchor span {
+  color: var(--theme-color);
+}
+
+[data-theme="light"] .markdown-section .anchor:hover span {
+  color: #0e7490;
+}
+
+/* ── 浅色：分隔线 ── */
+[data-theme="light"] .markdown-section hr {
+  border-color: #e2e8f0;
+}
+
+/* ── 浅色：图片 ── */
+[data-theme="light"] .markdown-section img {
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 浅色：Docsify 主题覆盖 ── */
+[data-theme="light"] body .sidebar-toggle {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] body .sidebar-toggle-button {
+  color: var(--text-color-secondary);
+}
+
+/* ── 浅色：加载动画 ── */
+[data-theme="light"] #app {
+  color: var(--text-color-secondary);
+}
+
+/* ══════════════════════════════════════
+   主题切换按钮
+   ══════════════════════════════════════ */
+#theme-toggle {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--card-background);
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#theme-toggle:hover {
+  background: var(--sidebar-link-hover-background);
+  color: var(--theme-color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] #theme-toggle {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] #theme-toggle:hover {
+  color: #0891b2;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 太阳图标（暗黑模式下的按钮） */
+.icon-sun::before {
+  content: "\2600";
+}
+
+/* 月亮图标（浅色模式下的按钮） */
+.icon-moon::before {
+  content: "\263E";
+}
