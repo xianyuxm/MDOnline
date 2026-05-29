@@ -608,3 +608,263 @@ body .sidebar-toggle-button {
 .icon-moon::before {
   content: "\263E";
 }
+
+/* ══════════════════════════════════════
+   右上角操作栏：Star + Sponsor
+   ══════════════════════════════════════ */
+#action-bar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 10000;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#action-bar a,
+#action-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border-color);
+  background: var(--card-background);
+  color: var(--text-color-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  line-height: 1;
+}
+
+#action-bar a:hover,
+#action-bar button:hover {
+  color: var(--theme-color);
+  border-color: var(--theme-color);
+  box-shadow: 0 2px 12px rgba(34, 211, 238, 0.2);
+}
+
+#action-star svg {
+  margin-top: -1px;
+}
+
+#action-donate svg {
+  margin-top: -1px;
+  color: #f472b6;
+}
+
+#action-donate:hover svg {
+  color: #ec4899;
+}
+
+[data-theme="light"] #action-bar a,
+[data-theme="light"] #action-bar button {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] #action-bar a:hover,
+[data-theme="light"] #action-bar button:hover {
+  color: #0891b2;
+  border-color: #0891b2;
+  box-shadow: 0 2px 12px rgba(8, 145, 178, 0.15);
+}
+
+/* ── 捐赠弹窗 ── */
+#donate-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+
+#donate-modal.open {
+  display: flex;
+}
+
+.donate-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.donate-content {
+  position: relative;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px 40px 28px;
+  max-width: 640px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: donate-in 0.25s ease-out;
+}
+
+@keyframes donate-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.donate-content h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: var(--heading-color);
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+.donate-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.donate-close:hover {
+  color: var(--theme-color);
+}
+
+.donate-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.donate-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.donate-card img {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  object-fit: cover;
+}
+
+.donate-card p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}
+
+[data-theme="light"] .donate-content {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .donate-card img {
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ── 响应式：操作栏 ── */
+@media (max-width: 768px) {
+  #action-bar {
+    top: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  #action-bar a,
+  #action-bar button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .donate-cards {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .donate-card img {
+    max-width: 220px;
+  }
+}
+
+/* ══════════════════════════════════════
+   图片灯箱（Lightbox）
+   ══════════════════════════════════════ */
+#img-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  align-items: center;
+  justify-content: center;
+}
+
+#img-lightbox.open {
+  display: flex;
+}
+
+.lightbox-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.lightbox-img {
+  position: relative;
+  max-width: 90vw;
+  max-height: 85vh;
+  border-radius: 12px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  animation: lightbox-in 0.2s ease-out;
+  z-index: 1;
+}
+
+@keyframes lightbox-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}

@@ -24,16 +24,18 @@ DOCS_DIR = os.path.join(BASE_DIR, 'docs')
 # ── 配置 ──
 
 # 分组在侧边栏中的显示顺序（未列出的目录按字母序排在末尾）
-GROUP_ORDER = ['目录1', '目录2']
+GROUP_ORDER = ['快速开始', '功能特性', '写作指南', '部署运维']
 
 # 目录名 → 侧边栏分组显示名
 GROUP_NAMES = {
-    '目录1': '目录1',
-    '目录2': '目录2',
+    '快速开始': '快速开始',
+    '功能特性': '功能特性',
+    '写作指南': '写作指南',
+    '部署运维': '部署运维',
 }
 
 # 不出现在侧边栏中的文件
-SKIP_FILES = {'_sidebar.md', '_navbar.md'}
+SKIP_FILES = {'_sidebar.md', '_navbar.md', 'README.md'}
 
 
 def get_first_heading(filepath):
