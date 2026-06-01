@@ -17,8 +17,17 @@
   <a href="#部署">部署</a> •
   <a href="#许可证">许可证</a>
 </p>
+
 <p align="center">
-  <img src="预览.png" alt="MDOnline">
+  <img src="images/preview-white.png" alt="MDOnline Preview" width="720">
+</p>
+
+<p align="center">
+  <img src="images/preview-dark.png" alt="MDOnline Preview" width="720">
+</p>
+
+<p align="center">
+  💬 联系作者：<font color="#22c55e">QQ 1224829392</font>
 </p>
 ---
 

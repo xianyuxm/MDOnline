@@ -4,6 +4,10 @@
 
 **在线演示**：[http://120.26.80.140:13180/mdonline/#/](http://120.26.80.140:13180/mdonline/#/)
 
+**联系方式**：💬 QQ [1224829392](https://qm.qq.com/q/1224829392)
+
+![MDOnline Preview](/images/preview.png)
+
 ## 特性一览
 
 - **零构建**：纯静态文件，无需 Webpack / Vite / Node.js
@@ -16,7 +20,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourname/mdonline.git
+git clone https://github.com/xianyuxm/MDOnline.git
 cd mdonline
 
 # 2. 启动预览
