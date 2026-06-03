@@ -6,7 +6,9 @@
 
 **联系方式**：💬 QQ [1224829392](https://qm.qq.com/q/1224829392)
 
-![MDOnline Preview](/images/preview.png)
+![MDOnline 暗黑主题预览](/images/preview-dark.png)
+
+![MDOnline 浅色主题预览](/images/preview-white.png)
 
 ## 特性一览
 

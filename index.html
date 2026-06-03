@@ -64,7 +64,7 @@
 
         // ── 右上角操作栏：Star + 捐赠 ──
         function actionBarPlugin(hook) {
-          var STAR_URL = 'https://github.com/yourname/mdonline';  // TODO: replace with your repo
+          var STAR_URL = 'https://github.com/xianyuxm/MDOnline';  // TODO: replace with your repo
 
           hook.mounted(function () {
             var bar = document.createElement('div');
@@ -157,6 +157,33 @@
           });
         },
 
+        // ── 侧边栏刷新按钮（配合 Go 服务器 /__refresh 接口） ──
+        function sidebarRefreshPlugin(hook) {
+          hook.mounted(function () {
+            var btn = document.createElement('button');
+            btn.id = 'sidebar-refresh';
+            btn.title = 'Regenerate sidebar';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+            document.body.appendChild(btn);
+
+            btn.addEventListener('click', function () {
+              btn.classList.add('spinning');
+              fetch('/__refresh')
+                .then(function (res) { return res.text(); })
+                .then(function () {
+                  setTimeout(function () {
+                    btn.classList.remove('spinning');
+                    location.reload();
+                  }, 400);
+                })
+                .catch(function () {
+                  btn.classList.remove('spinning');
+                  alert('Refresh failed. Make sure you are running MDOnline.exe (not python -m http.server).');
+                });
+            });
+          });
+        },
+
         // ── 主题切换插件 ──
         function themeSwitcher(hook) {
           var STORAGE_KEY = 'docsify-theme';
@@ -186,19 +213,19 @@
             document.body.appendChild(btn);
 
             // 读取存储的主题（默认暗黑）
-            var saved = localStorage.getItem(STORAGE_KEY) || 'dark';
+            var saved = localStorage.getItem(STORAGE_KEY) || 'light';
             applyTheme(saved);
 
             // 点击切换
             btn.addEventListener('click', function () {
-              var current = document.documentElement.getAttribute('data-theme') || 'dark';
+              var current = document.documentElement.getAttribute('data-theme') || 'light';
               applyTheme(current === 'dark' ? 'light' : 'dark');
             });
           });
 
           // 每次页面路由切换后重新检查按钮状态
           hook.doneEach(function () {
-            var current = document.documentElement.getAttribute('data-theme') || 'dark';
+            var current = document.documentElement.getAttribute('data-theme') || 'light';
             updateButton(current);
           });
         }

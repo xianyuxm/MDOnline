@@ -19,11 +19,11 @@
 </p>
 
 <p align="center">
-  <img src="images/preview-white.png" alt="MDOnline Preview" width="720">
+  <img src="./images/preview-white.png" alt="MDOnline Preview" width="720">
 </p>
 
 <p align="center">
-  <img src="images/preview-dark.png" alt="MDOnline Preview" width="720">
+  <img src="./images/preview-dark.png" alt="MDOnline Preview" width="720">
 </p>
 
 <p align="center">
@@ -44,14 +44,40 @@
 
 ## 快速开始
 
-### 1. 下载项目
+### 方式一：单文件桌面版（推荐）
+
+下载 `MDOnline.exe`，**双击运行**即可，无需安装任何依赖：
+
+1. 将 `MDOnline.exe` 放到任意目录
+2. 双击运行，程序会自动：
+   - 在同目录下创建 `docs/` 示例文档
+   - 生成侧边栏导航
+   - 启动本地服务并打开浏览器 → [http://localhost:8080](http://localhost:8080)
+3. 把你的 `.md` 文件放入 `docs/` 子目录中
+4. 点击页面右下角 **🔄 刷新按钮** 重新生成侧边栏，无需重启
+
+```
+MDOnline.exe          ← 双击运行
+docs/                 ← 首次运行自动创建
+  你的模块/
+    文档一.md
+    文档二.md
+```
+
+> **退出**：关闭命令行窗口或按 `Ctrl+C` 停止服务。
+
+---
+
+### 方式二：源码 + Python 静态服务
+
+**1. 下载项目**
 
 ```bash
 git clone https://github.com/xianyuxm/MDOnline.git
 cd MDOnline
 ```
 
-### 2. 写你的文档
+**2. 写你的文档**
 
 把 Markdown 文件放入 `docs/` 下的子目录中，例如：
 
@@ -65,7 +91,7 @@ docs/
     订单接口.md
 ```
 
-### 3. 生成侧边栏
+**3. 生成侧边栏**
 
 ```bash
 python gen_sidebar.py
@@ -73,7 +99,7 @@ python gen_sidebar.py
 
 脚本会自动扫描 `docs/` 下的子目录，读取每个 `.md` 文件的一级标题作为链接文字，生成 `_sidebar.md`。
 
-### 4. 本地预览
+**4. 本地预览**
 
 **方式一：Python**
 
@@ -91,6 +117,7 @@ python -m http.server 8080
 
 ```
 MDOnline/
+├── MDOnline.exe        # 单文件桌面版（双击运行，无需依赖）
 ├── index.html          # 入口页面（Docsify 配置 + 插件）
 ├── style.css           # 双主题样式（暗黑 + 浅色）
 ├── vue.css             # Docsify 基础主题（勿删）
@@ -203,6 +230,14 @@ MDOnline 是纯静态站点，可以部署到任何静态文件托管服务：
 | Python | 侧边栏自动生成脚本 |
 
 ## 常见问题
+
+**Q: MDOnline.exe 双击没有反应？**
+
+A: 可能被杀毒软件拦截，请将 exe 添加到白名单后重试。或右键 → 以管理员身份运行。
+
+**Q: 如何更换 MDOnline.exe 的文档内容？**
+
+A: 直接编辑 exe 同目录下的 `docs/` 目录，新增或修改 `.md` 文件后点击页面右下角的 **🔄 刷新按钮** 即可更新侧边栏。
 
 **Q: 新增文档后侧边栏没有更新？**
 
