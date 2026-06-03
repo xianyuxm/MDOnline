@@ -15,6 +15,7 @@
   <a href="#目录结构">目录结构</a> •
   <a href="#配置说明">配置说明</a> •
   <a href="#部署">部署</a> •
+  <a href="#从源码编译-mdonlineexe">从源码编译</a> •
   <a href="#许可证">许可证</a>
 </p>
 
@@ -219,6 +220,32 @@ MDOnline 是纯静态站点，可以部署到任何静态文件托管服务：
 - Netlify
 - Cloudflare Pages
 - 阿里云 OSS + CDN
+
+## 从源码编译 MDOnline.exe
+
+如果你想自行修改代码后重新打包，需要安装 [Go 1.21+](https://golang.org/dl/)。
+
+### 1. 同步静态资源到 static/ 目录
+
+`go build` 使用 `embed` 将 `static/` 目录打包进 exe，编译前需先同步：
+
+```powershell
+# 在项目根目录执行
+New-Item -ItemType Directory -Path "static","static\docs","static\images" -Force | Out-Null
+Copy-Item "index.html","style.css","vue.css","docsify.min.js","search.min.js","favicon.svg" -Destination "static\" -Force
+Copy-Item "images\*" -Destination "static\images\" -Force
+Copy-Item "docs\README.md" -Destination "static\docs\" -Force
+```
+
+### 2. 编译
+
+```powershell
+go build -o MDOnline.exe .
+```
+
+编译完成后会生成约 10MB 的 `MDOnline.exe`，内嵌了所有静态资源，可单独分发。
+
+> **注意**：每次修改 `index.html`、`style.css` 等前端文件后，需重新执行第 1 步同步到 `static/`，再重新编译，否则 exe 内嵌的仍是旧版本。
 
 ## 技术栈
 
