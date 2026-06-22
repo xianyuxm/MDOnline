@@ -16,3 +16,6 @@
   - [Vercel 部署](/docs/部署运维/Vercel部署)
   - [常见问题](/docs/部署运维/常见问题)
 
+- test
+  - [PDF 测试页面](/docs/test/PDF测试)
+

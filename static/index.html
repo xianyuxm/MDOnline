@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="MDOnline - 零构建 Markdown 文档站点" />
-  <title>MDOnline - Markdown 文档站点</title>
+  <meta name="description" content="MDOnline - Markdown docs site" />
+  <title>MDOnline - Markdown docs site</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="stylesheet" href="./vue.css" />
   <link rel="stylesheet" href="./style.css" />
   <script>
-    // 自动检测 basePath：兼容本地开发 (/) 和 Nginx 子路径部署 (/apidocs/)
     (function () {
       var path = window.location.pathname;
       window.$$docsifyBasePath = path.replace(/(?:\/index\.html)?\/?$/, '/') || '/';
@@ -28,8 +27,8 @@
         paths: 'auto',
         maxAge: 0,
         depth: 4,
-        noData: '没有找到相关内容',
-        placeholder: '搜索接口、流程、状态码'
+        noData: '\u6ca1\u6709\u627e\u5230\u76f8\u5173\u5185\u5bb9',
+        placeholder: '\u641c\u7d22\u63a5\u53e3\u3001\u6d41\u7a0b\u3001\u72b6\u6001\u7801'
       },
       plugins: [
         function collapsibleSidebar(hook) {
@@ -37,21 +36,15 @@
             document.querySelectorAll('.sidebar-nav li').forEach(function (item) {
               var childList = item.querySelector(':scope > ul');
               var trigger = item.querySelector(':scope > p, :scope > a');
-
-              if (!childList || !trigger || trigger.dataset.collapseBound === 'true') {
-                return;
-              }
-
+              if (!childList || !trigger || trigger.dataset.collapseBound === 'true') { return; }
               trigger.dataset.collapseBound = 'true';
               trigger.classList.add('sidebar-collapse-trigger');
               trigger.setAttribute('role', 'button');
               trigger.setAttribute('tabindex', '0');
-
               trigger.addEventListener('click', function (event) {
                 event.preventDefault();
                 item.classList.toggle('sidebar-group-collapsed');
               });
-
               trigger.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
@@ -62,15 +55,13 @@
           });
         },
 
-        // ── 右上角操作栏：Star + 捐赠 ──
+        // --- Action bar: Star + Donate ---
         function actionBarPlugin(hook) {
-          var STAR_URL = 'https://github.com/xianyuxm/MDOnline';  // TODO: replace with your repo
-
+          var STAR_URL = 'https://github.com/xianyuxm/MDOnline';
           hook.mounted(function () {
             var bar = document.createElement('div');
             bar.id = 'action-bar';
 
-            // Star button
             var starBtn = document.createElement('a');
             starBtn.id = 'action-star';
             starBtn.href = STAR_URL;
@@ -80,37 +71,33 @@
             starBtn.innerHTML = '<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg><span>Star</span>';
             bar.appendChild(starBtn);
 
-            // Donate button
             var donateBtn = document.createElement('button');
             donateBtn.id = 'action-donate';
             donateBtn.title = 'Buy me a coffee';
             donateBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>Sponsor</span>';
             bar.appendChild(donateBtn);
-
             document.body.appendChild(bar);
 
-            // Donate modal
             var modal = document.createElement('div');
             modal.id = 'donate-modal';
             modal.innerHTML =
               '<div class="donate-overlay"></div>' +
               '<div class="donate-content">' +
                 '<button class="donate-close">&times;</button>' +
-                '<h3>Thanks for your support!</h3>' +
+                '<h3>' + '\u611f\u8c22\u60a8\u7684\u652f\u6301\uff01' + '</h3>' +
                 '<div class="donate-cards">' +
                   '<div class="donate-card">' +
-                    '<img src="./images/wechat-pay.png" alt="WeChat Pay" />' +
-                    '<p>WeChat Pay</p>' +
+                    '<img src="./images/wechat-pay.png" alt="' + '\u5fae\u4fe1\u652f\u4ed8' + '" />' +
+                    '<p>' + '\u5fae\u4fe1\u652f\u4ed8' + '</p>' +
                   '</div>' +
                   '<div class="donate-card">' +
-                    '<img src="./images/alipay.png" alt="Alipay" />' +
-                    '<p>Alipay</p>' +
+                    '<img src="./images/alipay.png" alt="' + '\u652f\u4ed8\u5b9d' + '" />' +
+                    '<p>' + '\u652f\u4ed8\u5b9d' + '</p>' +
                   '</div>' +
                 '</div>' +
               '</div>';
             document.body.appendChild(modal);
 
-            // Image lightbox
             var lightbox = document.createElement('div');
             lightbox.id = 'img-lightbox';
             lightbox.innerHTML =
@@ -119,27 +106,16 @@
               '<button class="lightbox-close">&times;</button>';
             document.body.appendChild(lightbox);
 
-            // Open / close modal
-            donateBtn.addEventListener('click', function () {
-              modal.classList.add('open');
-            });
-            modal.querySelector('.donate-overlay').addEventListener('click', function () {
-              modal.classList.remove('open');
-            });
-            modal.querySelector('.donate-close').addEventListener('click', function () {
-              modal.classList.remove('open');
-            });
+            donateBtn.addEventListener('click', function () { modal.classList.add('open'); });
+            modal.querySelector('.donate-overlay').addEventListener('click', function () { modal.classList.remove('open'); });
+            modal.querySelector('.donate-close').addEventListener('click', function () { modal.classList.remove('open'); });
             document.addEventListener('keydown', function (e) {
               if (e.key === 'Escape') {
-                if (lightbox.classList.contains('open')) {
-                  lightbox.classList.remove('open');
-                } else {
-                  modal.classList.remove('open');
-                }
+                if (lightbox.classList.contains('open')) { lightbox.classList.remove('open'); }
+                else { modal.classList.remove('open'); }
               }
             });
 
-            // Click donate card image to lightbox
             modal.querySelectorAll('.donate-card img').forEach(function (img) {
               img.style.cursor = 'zoom-in';
               img.addEventListener('click', function () {
@@ -148,16 +124,12 @@
                 lightbox.classList.add('open');
               });
             });
-            lightbox.querySelector('.lightbox-overlay').addEventListener('click', function () {
-              lightbox.classList.remove('open');
-            });
-            lightbox.querySelector('.lightbox-close').addEventListener('click', function () {
-              lightbox.classList.remove('open');
-            });
+            lightbox.querySelector('.lightbox-overlay').addEventListener('click', function () { lightbox.classList.remove('open'); });
+            lightbox.querySelector('.lightbox-close').addEventListener('click', function () { lightbox.classList.remove('open'); });
           });
         },
 
-        // ── 侧边栏刷新按钮（配合 Go 服务器 /__refresh 接口） ──
+        // --- Sidebar refresh button ---
         function sidebarRefreshPlugin(hook) {
           hook.mounted(function () {
             var btn = document.createElement('button');
@@ -165,16 +137,12 @@
             btn.title = 'Regenerate sidebar';
             btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
             document.body.appendChild(btn);
-
             btn.addEventListener('click', function () {
               btn.classList.add('spinning');
               fetch('/__refresh')
                 .then(function (res) { return res.text(); })
                 .then(function () {
-                  setTimeout(function () {
-                    btn.classList.remove('spinning');
-                    location.reload();
-                  }, 400);
+                  setTimeout(function () { btn.classList.remove('spinning'); location.reload(); }, 400);
                 })
                 .catch(function () {
                   btn.classList.remove('spinning');
@@ -184,49 +152,63 @@
           });
         },
 
-        // ── 主题切换插件 ──
+        // --- Theme switcher ---
         function themeSwitcher(hook) {
           var STORAGE_KEY = 'docsify-theme';
-
           function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem(STORAGE_KEY, theme);
             updateButton(theme);
           }
-
           function updateButton(theme) {
             var btn = document.getElementById('theme-toggle');
             if (!btn) return;
             if (theme === 'light') {
               btn.className = 'icon-moon';
-              btn.title = '切换为暗黑模式';
+              btn.title = '\u5207\u6362\u4e3a\u6697\u9ed1\u6a21\u5f0f';
             } else {
               btn.className = 'icon-sun';
-              btn.title = '切换为浅色模式';
+              btn.title = '\u5207\u6362\u4e3a\u6d45\u8272\u6a21\u5f0f';
             }
           }
-
           hook.mounted(function () {
-            // 创建浮动按钮
             var btn = document.createElement('button');
             btn.id = 'theme-toggle';
             document.body.appendChild(btn);
-
-            // 读取存储的主题（默认暗黑）
             var saved = localStorage.getItem(STORAGE_KEY) || 'light';
             applyTheme(saved);
-
-            // 点击切换
             btn.addEventListener('click', function () {
               var current = document.documentElement.getAttribute('data-theme') || 'light';
               applyTheme(current === 'dark' ? 'light' : 'dark');
             });
           });
-
-          // 每次页面路由切换后重新检查按钮状态
           hook.doneEach(function () {
             var current = document.documentElement.getAttribute('data-theme') || 'light';
             updateButton(current);
+          });
+        },
+
+        // --- PDF link interceptor: bypass Docsify hash routing ---
+        function pdfLinkPlugin(hook) {
+          hook.mounted(function () {
+            document.addEventListener('click', function (e) {
+              var link = e.target.closest('a[href]');
+              if (!link) return;
+              var href = link.getAttribute('href');
+              if (!href || !href.endsWith('.pdf')) return;
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              var fileUrl;
+              if (href.startsWith('/')) {
+                fileUrl = href;
+              } else if (href.startsWith('#')) {
+                fileUrl = '/docs' + href.substring(1);
+              } else {
+                fileUrl = '/' + href;
+              }
+              window.location.href = fileUrl;
+            }, true);
           });
         }
       ]
@@ -234,7 +216,7 @@
   </script>
 </head>
 <body>
-  <div id="app">加载文档中...</div>
+  <div id="app">\u52a0\u8f7d\u6587\u6863\u4e2d...</div>
   <script src="./docsify.min.js"></script>
   <script src="./search.min.js"></script>
 </body>

@@ -22,15 +22,15 @@ import (
 //go:embed all:static
 var staticFiles embed.FS
 
-// ── Configuration ──
+// === Configuration ===
 
-var groupOrder = []string{"快速开始", "功能特性", "写作指南", "部署运维"}
+var groupOrder = []string{"\u5feb\u901f\u5f00\u59cb", "\u529f\u80fd\u7279\u6027", "\u5199\u4f5c\u6307\u5357", "\u90e8\u7f72\u8fd0\u7ef4"}
 
 var groupNames = map[string]string{
-	"快速开始": "快速开始",
-	"功能特性": "功能特性",
-	"写作指南": "写作指南",
-	"部署运维": "部署运维",
+	"\u5feb\u901f\u5f00\u59cb": "\u5feb\u901f\u5f00\u59cb",
+	"\u529f\u80fd\u7279\u6027": "\u529f\u80fd\u7279\u6027",
+	"\u5199\u4f5c\u6307\u5357": "\u5199\u4f5c\u6307\u5357",
+	"\u90e8\u7f72\u8fd0\u7ef4": "\u90e8\u7f72\u8fd0\u7ef4",
 }
 
 var skipFiles = map[string]bool{
@@ -41,13 +41,12 @@ var skipFiles = map[string]bool{
 
 const listenPort = ":8080"
 
-// ── Initialization: extract embedded files if missing ──
+// === Initialization: extract embedded files if missing ===
 
 func initWorkDir(baseDir string) {
 	docsDir := filepath.Join(baseDir, "docs")
 	imagesDir := filepath.Join(baseDir, "images")
 
-	// Check if docs/ already exists
 	needsInit := false
 	if _, err := os.Stat(docsDir); os.IsNotExist(err) {
 		needsInit = true
@@ -56,7 +55,6 @@ func initWorkDir(baseDir string) {
 	if needsInit {
 		fmt.Println("First run: initializing docs directory...")
 	} else {
-		// Even if docs/ exists, check if core files are missing
 		coreFiles := []string{"index.html", "style.css", "vue.css", "docsify.min.js", "search.min.js", "favicon.svg"}
 		for _, f := range coreFiles {
 			if _, err := os.Stat(filepath.Join(baseDir, f)); os.IsNotExist(err) {
@@ -70,13 +68,11 @@ func initWorkDir(baseDir string) {
 		return
 	}
 
-	// Extract all embedded files to baseDir
 	fs.WalkDir(staticFiles, "static", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return nil
 		}
 
-		// path = "static/index.html", "static/docs/README.md", etc.
 		relPath := strings.TrimPrefix(path, "static/")
 		relPath = strings.TrimPrefix(relPath, "/")
 		if relPath == "" {
@@ -85,15 +81,12 @@ func initWorkDir(baseDir string) {
 
 		localPath := filepath.Join(baseDir, relPath)
 
-		// Skip if file already exists (don't overwrite user edits)
 		if _, err := os.Stat(localPath); err == nil {
 			return nil
 		}
 
-		// Create parent directory
 		os.MkdirAll(filepath.Dir(localPath), 0755)
 
-		// Read embedded file and write to disk
 		data, err := staticFiles.ReadFile(path)
 		if err != nil {
 			fmt.Printf("  Warning: cannot read embedded %s: %v\n", relPath, err)
@@ -107,11 +100,11 @@ func initWorkDir(baseDir string) {
 		return nil
 	})
 
-	_ = imagesDir // images dir is created by the walk above if needed
+	_ = imagesDir
 	fmt.Println("Initialization complete.")
 }
 
-// ── Sidebar generation ──
+// === Sidebar generation ===
 
 var headingRe = regexp.MustCompile(`^#\s+(.+)`)
 
@@ -144,7 +137,6 @@ func generateSidebar(baseDir string) string {
 		return ""
 	}
 
-	// Collect subdirectories
 	var subdirs []string
 	for _, e := range entries {
 		if e.IsDir() {
@@ -152,7 +144,6 @@ func generateSidebar(baseDir string) string {
 		}
 	}
 
-	// Sort by groupOrder, then alphabetically
 	orderSet := map[string]bool{}
 	for _, g := range groupOrder {
 		orderSet[g] = true
@@ -227,19 +218,16 @@ func writeSidebar(baseDir, content string) error {
 		return fmt.Errorf("no .md files found in docs/")
 	}
 
-	// Write root _sidebar.md
 	rootSidebar := filepath.Join(baseDir, "_sidebar.md")
 	if err := os.WriteFile(rootSidebar, []byte(content+"\n"), 0644); err != nil {
 		return fmt.Errorf("write root _sidebar.md: %w", err)
 	}
 
-	// Write docs/_sidebar.md
 	docsSidebar := filepath.Join(baseDir, "docs", "_sidebar.md")
 	if err := os.WriteFile(docsSidebar, []byte(content+"\n"), 0644); err != nil {
 		return fmt.Errorf("write docs/_sidebar.md: %w", err)
 	}
 
-	// Remove sub-directory _sidebar.md files
 	docsDir := filepath.Join(baseDir, "docs")
 	entries, _ := os.ReadDir(docsDir)
 	for _, e := range entries {
@@ -252,10 +240,9 @@ func writeSidebar(baseDir, content string) error {
 	return nil
 }
 
-// ── HTTP server ──
+// === HTTP server ===
 
 func main() {
-	// Determine base directory (where the exe lives)
 	exePath, err := os.Executable()
 	if err != nil {
 		fmt.Println("Error: cannot determine executable path")
@@ -263,10 +250,8 @@ func main() {
 	}
 	baseDir := filepath.Dir(exePath)
 
-	// Initialize: extract embedded files if local files are missing
 	initWorkDir(baseDir)
 
-	// Generate sidebar on startup
 	fmt.Println("Generating sidebar...")
 	content := generateSidebar(baseDir)
 	if err := writeSidebar(baseDir, content); err != nil {
@@ -277,7 +262,6 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Refresh endpoint: regenerate sidebar and return OK
 	mux.HandleFunc("/__refresh", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost && r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -293,21 +277,17 @@ func main() {
 		fmt.Println("Sidebar refreshed.")
 	})
 
-	// Static file serving: read file directly (full control over Chinese paths)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// URL-decode the path for Chinese filenames
 		reqPath := r.URL.Path
 		if decoded, err := url.PathUnescape(reqPath); err == nil {
 			reqPath = decoded
 		}
 
-		// Normalize: remove leading slash, convert to platform path
 		relPath := strings.TrimPrefix(reqPath, "/")
 		if relPath == "" {
 			relPath = "index.html"
 		}
 
-		// Try reading local file first
 		localPath := filepath.Join(baseDir, filepath.FromSlash(relPath))
 		if data, err := os.ReadFile(localPath); err == nil {
 			fmt.Printf("[200] local  %s\n", relPath)
@@ -316,7 +296,6 @@ func main() {
 			return
 		}
 
-		// If no extension, try appending .md (Docsify requests files without .md)
 		if filepath.Ext(relPath) == "" {
 			mdRelPath := relPath + ".md"
 			mdLocalPath := filepath.Join(baseDir, filepath.FromSlash(mdRelPath))
@@ -326,7 +305,6 @@ func main() {
 				w.Write(data)
 				return
 			}
-			// Also try embedded .md
 			mdEmbedPath := "static/" + filepath.ToSlash(mdRelPath)
 			if data, err := staticFiles.ReadFile(mdEmbedPath); err == nil {
 				fmt.Printf("[200] embed  %s -> %s\n", relPath, mdRelPath)
@@ -336,7 +314,6 @@ func main() {
 			}
 		}
 
-		// Fallback to embedded file
 		embedPath := "static/" + filepath.ToSlash(relPath)
 		if data, err := staticFiles.ReadFile(embedPath); err == nil {
 			fmt.Printf("[200] embed  %s\n", relPath)
@@ -345,9 +322,6 @@ func main() {
 			return
 		}
 
-		// SPA fallback: ONLY for routes without file extension (Docsify hash routing)
-		// Files with extensions (.md, .png, etc.) that are not found should return 404
-		// so Docsify can walk up the directory tree to find _sidebar.md
 		if filepath.Ext(relPath) != "" {
 			fmt.Printf("[404] %s\n", relPath)
 			http.NotFound(w, r)
@@ -370,7 +344,6 @@ func main() {
 		http.NotFound(w, r)
 	})
 
-	// Open browser
 	url := "http://localhost" + listenPort
 	go openBrowser(url)
 
@@ -398,6 +371,8 @@ func mimeType(path string) string {
 		return "image/png"
 	case strings.HasSuffix(path, ".jpg"), strings.HasSuffix(path, ".jpeg"):
 		return "image/jpeg"
+	case strings.HasSuffix(path, ".pdf"):
+		return "application/pdf"
 	case strings.HasSuffix(path, ".json"):
 		return "application/json; charset=utf-8"
 	default:
