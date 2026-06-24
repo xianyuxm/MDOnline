@@ -192,10 +192,13 @@
         function pdfLinkPlugin(hook) {
           hook.mounted(function () {
             function currentDocDir() {
+              var basePath = window.$$docsifyBasePath || '/';
               var path = window.location.hash.replace(/^#\/?/, '/') || '/';
               path = path.split(/[?#]/)[0];
-              if (path.endsWith('/')) return path;
-              return path.substring(0, path.lastIndexOf('/') + 1) || '/';
+              if (!path.endsWith('/')) {
+                path = path.substring(0, path.lastIndexOf('/') + 1) || '/';
+              }
+              return new URL(basePath.replace(/\/$/, '/') + path.replace(/^\/+/, ''), window.location.origin).pathname;
             }
 
             function resolveFromCurrentDoc(href) {
@@ -223,7 +226,7 @@
               } else {
                 fileUrl = resolveFromCurrentDoc(href);
               }
-              window.location.href = fileUrl;
+              window.open(fileUrl, '_blank', 'noopener');
             }, true);
           });
         }

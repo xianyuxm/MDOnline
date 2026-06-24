@@ -191,23 +191,42 @@
         // --- PDF link interceptor: bypass Docsify hash routing ---
         function pdfLinkPlugin(hook) {
           hook.mounted(function () {
+            function currentDocDir() {
+              var basePath = window.$$docsifyBasePath || '/';
+              var path = window.location.hash.replace(/^#\/?/, '/') || '/';
+              path = path.split(/[?#]/)[0];
+              if (!path.endsWith('/')) {
+                path = path.substring(0, path.lastIndexOf('/') + 1) || '/';
+              }
+              return new URL(basePath.replace(/\/$/, '/') + path.replace(/^\/+/, ''), window.location.origin).pathname;
+            }
+
+            function resolveFromCurrentDoc(href) {
+              return new URL(href, window.location.origin + currentDocDir()).pathname;
+            }
+
             document.addEventListener('click', function (e) {
               var link = e.target.closest('a[href]');
               if (!link) return;
               var href = link.getAttribute('href');
-              if (!href || !href.endsWith('.pdf')) return;
+              if (!href || !/\.pdf(?:[?#].*)?$/i.test(href)) return;
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
               var fileUrl;
-              if (href.startsWith('/')) {
+              if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) {
+                fileUrl = href;
+              } else if (href.startsWith('/')) {
                 fileUrl = href;
               } else if (href.startsWith('#')) {
-                fileUrl = '/docs' + href.substring(1);
+                var hashPath = href.substring(1);
+                fileUrl = hashPath.startsWith('/docs/')
+                  ? hashPath
+                  : resolveFromCurrentDoc(hashPath.replace(/^\/+/, ''));
               } else {
-                fileUrl = '/' + href;
+                fileUrl = resolveFromCurrentDoc(href);
               }
-              window.location.href = fileUrl;
+              window.open(fileUrl, '_blank', 'noopener');
             }, true);
           });
         }
