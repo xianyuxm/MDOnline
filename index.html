@@ -159,6 +159,9 @@
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem(STORAGE_KEY, theme);
             updateButton(theme);
+            if (window.renderMermaidDiagrams) {
+              window.renderMermaidDiagrams(true);
+            }
           }
           function updateButton(theme) {
             var btn = document.getElementById('theme-toggle');
@@ -185,6 +188,204 @@
           hook.doneEach(function () {
             var current = document.documentElement.getAttribute('data-theme') || 'light';
             updateButton(current);
+          });
+        },
+
+        // --- Mermaid diagram renderer ---
+        function mermaidPlugin(hook) {
+          var renderId = 0;
+          var viewer = null;
+          var viewerStage = null;
+          var viewerScale = 1;
+          var viewerX = 0;
+          var viewerY = 0;
+          var isDragging = false;
+          var dragStartX = 0;
+          var dragStartY = 0;
+          var dragOriginX = 0;
+          var dragOriginY = 0;
+
+          function getTheme() {
+            return (document.documentElement.getAttribute('data-theme') || 'light') === 'dark'
+              ? 'dark'
+              : 'default';
+          }
+
+          function updateViewerTransform() {
+            if (!viewerStage) return;
+            viewerStage.style.transform = 'translate(' + viewerX + 'px, ' + viewerY + 'px) scale(' + viewerScale + ')';
+          }
+
+          function resetViewerTransform() {
+            viewerScale = 1;
+            viewerX = 0;
+            viewerY = 0;
+            updateViewerTransform();
+          }
+
+          function closeViewer() {
+            if (viewer) {
+              viewer.classList.remove('open');
+            }
+            isDragging = false;
+          }
+
+          function zoomViewer(delta) {
+            viewerScale = Math.max(0.25, Math.min(5, viewerScale + delta));
+            updateViewerTransform();
+          }
+
+          function ensureViewer() {
+            if (viewer) return;
+
+            viewer = document.createElement('div');
+            viewer.id = 'mermaid-viewer';
+            viewer.innerHTML =
+              '<div class="mermaid-viewer-backdrop"></div>' +
+              '<div class="mermaid-viewer-toolbar">' +
+                '<button class="mermaid-viewer-zoom-out" title="缩小">−</button>' +
+                '<button class="mermaid-viewer-reset" title="重置">1:1</button>' +
+                '<button class="mermaid-viewer-zoom-in" title="放大">+</button>' +
+                '<button class="mermaid-viewer-close" title="关闭">&times;</button>' +
+              '</div>' +
+              '<div class="mermaid-viewer-canvas">' +
+                '<div class="mermaid-viewer-stage"></div>' +
+              '</div>';
+            document.body.appendChild(viewer);
+
+            viewerStage = viewer.querySelector('.mermaid-viewer-stage');
+            viewer.querySelector('.mermaid-viewer-backdrop').addEventListener('click', closeViewer);
+            viewer.querySelector('.mermaid-viewer-close').addEventListener('click', closeViewer);
+            viewer.querySelector('.mermaid-viewer-reset').addEventListener('click', resetViewerTransform);
+            viewer.querySelector('.mermaid-viewer-zoom-in').addEventListener('click', function () { zoomViewer(0.25); });
+            viewer.querySelector('.mermaid-viewer-zoom-out').addEventListener('click', function () { zoomViewer(-0.25); });
+
+            viewer.querySelector('.mermaid-viewer-canvas').addEventListener('wheel', function (event) {
+              event.preventDefault();
+              var nextScale = viewerScale * (event.deltaY < 0 ? 1.12 : 0.88);
+              viewerScale = Math.max(0.25, Math.min(5, nextScale));
+              updateViewerTransform();
+            }, { passive: false });
+
+            viewer.querySelector('.mermaid-viewer-canvas').addEventListener('pointerdown', function (event) {
+              if (event.target.closest('button')) return;
+              isDragging = true;
+              dragStartX = event.clientX;
+              dragStartY = event.clientY;
+              dragOriginX = viewerX;
+              dragOriginY = viewerY;
+              viewer.classList.add('dragging');
+            });
+
+            document.addEventListener('pointermove', function (event) {
+              if (!isDragging) return;
+              viewerX = dragOriginX + event.clientX - dragStartX;
+              viewerY = dragOriginY + event.clientY - dragStartY;
+              updateViewerTransform();
+            });
+
+            document.addEventListener('pointerup', function () {
+              isDragging = false;
+              if (viewer) {
+                viewer.classList.remove('dragging');
+              }
+            });
+
+            document.addEventListener('keydown', function (event) {
+              if (event.key === 'Escape' && viewer.classList.contains('open')) {
+                closeViewer();
+              }
+            });
+          }
+
+          function openViewer(diagram) {
+            var svg = diagram.querySelector('svg');
+            if (!svg) return;
+            ensureViewer();
+            viewerStage.innerHTML = svg.outerHTML;
+            viewer.classList.add('open');
+            resetViewerTransform();
+          }
+
+          function attachZoomButton(diagram) {
+            if (diagram.querySelector('.mermaid-zoom-button')) return;
+            var button = document.createElement('button');
+            button.className = 'mermaid-zoom-button';
+            button.type = 'button';
+            button.title = '放大查看';
+            button.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>';
+            button.addEventListener('click', function () {
+              openViewer(diagram);
+            });
+            diagram.appendChild(button);
+          }
+
+          function resetRenderedDiagrams() {
+            document.querySelectorAll('.mermaid-diagram[data-mermaid-source]').forEach(function (diagram) {
+              var pre = document.createElement('pre');
+              var code = document.createElement('code');
+              pre.setAttribute('data-lang', 'mermaid');
+              code.className = 'lang-mermaid';
+              code.textContent = diagram.getAttribute('data-mermaid-source') || '';
+              pre.appendChild(code);
+              diagram.replaceWith(pre);
+            });
+          }
+
+          function renderMermaidDiagrams(force) {
+            if (!window.mermaid) return;
+            if (force) {
+              resetRenderedDiagrams();
+            }
+
+            window.mermaid.initialize({
+              startOnLoad: false,
+              securityLevel: 'loose',
+              theme: getTheme()
+            });
+
+            document.querySelectorAll('pre[data-lang="mermaid"]:not([data-mermaid-rendered]), code.lang-mermaid:not([data-mermaid-rendered])').forEach(function (node) {
+              var pre = node.tagName.toLowerCase() === 'pre' ? node : node.closest('pre');
+              var code = node.tagName.toLowerCase() === 'code' ? node : (pre && pre.querySelector('code'));
+              if (!code) return;
+
+              var source = code.textContent.trim();
+              if (!source) return;
+
+              if (pre) {
+                pre.dataset.mermaidRendered = 'true';
+              }
+              code.dataset.mermaidRendered = 'true';
+
+              var container = document.createElement('div');
+              container.className = 'mermaid-diagram';
+              container.setAttribute('data-mermaid-source', source);
+              container.textContent = source;
+              if (pre) {
+                pre.replaceWith(container);
+              } else {
+                code.replaceWith(container);
+              }
+
+              var id = 'mermaid-diagram-' + (++renderId);
+              Promise.resolve(window.mermaid.render(id, source))
+                .then(function (result) {
+                  container.innerHTML = result.svg || result;
+                  if (result.bindFunctions) {
+                    result.bindFunctions(container);
+                  }
+                  attachZoomButton(container);
+                })
+                .catch(function (err) {
+                  container.classList.add('mermaid-diagram-error');
+                  container.textContent = 'Mermaid render error: ' + (err && err.message ? err.message : err);
+                });
+            });
+          }
+
+          window.renderMermaidDiagrams = renderMermaidDiagrams;
+          hook.doneEach(function () {
+            renderMermaidDiagrams(false);
           });
         },
 
@@ -236,6 +437,7 @@
 </head>
 <body>
   <div id="app">\u52a0\u8f7d\u6587\u6863\u4e2d...</div>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="./docsify.min.js"></script>
   <script src="./search.min.js"></script>
 </body>

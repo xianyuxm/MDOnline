@@ -6,6 +6,7 @@
   - [主题切换](/docs/功能特性/主题切换)
   - [全文搜索](/docs/功能特性/全文搜索)
   - [智能侧边栏](/docs/功能特性/智能侧边栏)
+  - [Mermaid 图表示例](/docs/功能特性/Mermaid图表示例)
 
 - 写作指南
   - [Markdown 语法速查](/docs/写作指南/Markdown语法速查)
@@ -18,4 +19,3 @@
 
 - test
   - [PDF 测试页面](/docs/test/PDF测试)
-
