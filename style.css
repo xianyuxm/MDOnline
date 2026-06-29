@@ -16,6 +16,7 @@
   --code-theme-text: #cdd6f4;
   --border-color: #2a3040;
   --accent-glow: rgba(34, 211, 238, 0.15);
+  --mermaid-viewer-background: #0f1117;
 }
 
 /* ── 全局 ── */
@@ -433,6 +434,7 @@ body .sidebar-toggle-button {
   --code-theme-text: #334155;
   --border-color: #e2e8f0;
   --accent-glow: rgba(8, 145, 178, 0.12);
+  --mermaid-viewer-background: #eef2f6;
 }
 
 /* ── 浅色：全局 ── */
@@ -887,8 +889,7 @@ body .sidebar-toggle-button {
 .mermaid-viewer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(6px);
+  background: var(--mermaid-viewer-background);
 }
 
 .mermaid-viewer-toolbar {
@@ -924,6 +925,19 @@ body .sidebar-toggle-button {
   font-weight: 700;
 }
 
+[data-theme="light"] .mermaid-viewer-toolbar button {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .mermaid-viewer-toolbar button:hover {
+  background: #ffffff;
+  border-color: var(--theme-color);
+  color: var(--theme-color);
+}
+
 .mermaid-viewer-canvas {
   position: absolute;
   inset: 0;
@@ -954,6 +968,8 @@ body .sidebar-toggle-button {
   max-height: none;
   background: transparent;
   transform: translate(-50%, -50%);
+  text-rendering: geometricPrecision;
+  shape-rendering: geometricPrecision;
 }
 
 .lightbox-overlay {
