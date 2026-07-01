@@ -12,6 +12,12 @@
     (function () {
       var path = window.location.pathname;
       window.$$docsifyBasePath = path.replace(/(?:\/index\.html)?\/?$/, '/') || '/';
+
+      var hash = window.location.hash;
+      if (/^#\/?\.{2}\//.test(hash)) {
+        var normalized = new URL(hash.replace(/^#\/?/, ''), 'http://mdonline.local/docs/').pathname;
+        window.location.replace('#/docs' + normalized);
+      }
     })();
 
     window.$docsify = {
@@ -734,6 +740,86 @@
           window.renderMermaidDiagrams = renderMermaidDiagrams;
           hook.doneEach(function () {
             renderMermaidDiagrams(false);
+          });
+        },
+
+        // --- Normalize relative Markdown document links under /docs ---
+        function relativeDocLinkPlugin(hook) {
+          function splitRoute(route) {
+            var hashIndex = route.indexOf('#');
+            var anchor = '';
+            if (hashIndex >= 0) {
+              anchor = route.slice(hashIndex);
+              route = route.slice(0, hashIndex);
+            }
+
+            var queryIndex = route.indexOf('?');
+            var query = '';
+            if (queryIndex >= 0) {
+              query = route.slice(queryIndex);
+              route = route.slice(0, queryIndex);
+            }
+
+            return { path: route, query: query, anchor: anchor };
+          }
+
+          function currentRouteDir() {
+            var route = decodeURI(window.location.hash.replace(/^#\/?/, '/')) || '/';
+            route = splitRoute(route).path;
+            if (!route || route === '/') return '/docs/';
+            if (!route.endsWith('/')) {
+              route = route.substring(0, route.lastIndexOf('/') + 1) || '/';
+            }
+            return route;
+          }
+
+          function normalizeDocRoute(route) {
+            var parts = splitRoute(route);
+            var path = decodeURI(parts.path || '');
+            if (!path || !/^(?:\.{1,2}\/|\/\.{1,2}\/)/.test(path)) {
+              return null;
+            }
+
+            path = path.replace(/^\/+/, '');
+            var resolved = new URL(path, 'http://mdonline.local' + currentRouteDir()).pathname;
+            if (!resolved.startsWith('/docs/')) {
+              resolved = '/docs' + (resolved.startsWith('/') ? resolved : '/' + resolved);
+            }
+            resolved = resolved.replace(/\.md$/i, '');
+            return '#/' + encodeURI(resolved.replace(/^\/+/, '')) + parts.query + parts.anchor;
+          }
+
+          function normalizeLink(link) {
+            var href = link.getAttribute('href');
+            if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) return;
+
+            var nextHref = null;
+            if (href.startsWith('#/')) {
+              nextHref = normalizeDocRoute(href.slice(2));
+            } else if (/^\.{1,2}\//.test(href)) {
+              nextHref = normalizeDocRoute(href);
+            }
+
+            if (nextHref) {
+              link.setAttribute('href', nextHref);
+            }
+          }
+
+          function normalizeLinks() {
+            document.querySelectorAll('.markdown-section a[href]').forEach(normalizeLink);
+          }
+
+          hook.doneEach(function () {
+            normalizeLinks();
+          });
+
+          hook.mounted(function () {
+            document.addEventListener('click', function (event) {
+              var link = event.target.closest && event.target.closest('.markdown-section a[href]');
+              if (link) {
+                normalizeLink(link);
+              }
+            }, true);
           });
         },
 
