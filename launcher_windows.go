@@ -52,6 +52,9 @@ const (
 	odsSelected         = 0x0001
 	iconSmall           = 0
 	iconBig             = 1
+	imageIcon           = 1
+	lrLoadFromFile      = 0x00000010
+	lrDefaultSize       = 0x00000040
 	colorWindow         = 5
 	swShow              = 5
 	idOpenDocs          = 1001
@@ -167,6 +170,7 @@ var (
 	procRoundRect     = gdi32.NewProc("RoundRect")
 	procDeleteObject  = gdi32.NewProc("DeleteObject")
 	procLoadIcon      = user32.NewProc("LoadIconW")
+	procLoadImage     = user32.NewProc("LoadImageW")
 	procLoadCursor    = user32.NewProc("LoadCursorW")
 	procGetDpiForWin  = user32.NewProc("GetDpiForWindow")
 	procSetDpiCtx     = user32.NewProc("SetProcessDpiAwarenessContext")
@@ -625,8 +629,15 @@ func sr(left, top, right, bottom int32) rect {
 
 func loadAppIcon(baseDir string) hicon {
 	iconPath := filepath.Join(baseDir, "favicon.ico")
-	icon, _, _ := procExtractIcon.Call(0, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(iconPath))), 0)
-	if icon != 0 && icon != 1 {
+	icon, _, _ := procLoadImage.Call(
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(iconPath))),
+		imageIcon,
+		0,
+		0,
+		lrLoadFromFile|lrDefaultSize,
+	)
+	if icon != 0 {
 		return hicon(icon)
 	}
 

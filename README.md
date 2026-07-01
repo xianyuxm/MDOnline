@@ -240,10 +240,24 @@ Copy-Item "images\*" -Destination "static\images\" -Force
 Copy-Item "docs\README.md" -Destination "static\docs\" -Force
 ```
 
-### 2. 编译正式版和调试版
+### 2. 生成 Windows 程序图标资源
+
+正式版 `MDOnline.exe` 的程序图标来自 `favicon.ico`。首次打包或更换图标后，需要生成 `app_windows.syso`，Go 编译时会自动把它链接进 exe，用于资源管理器、窗口标题栏和任务栏图标。
 
 ```powershell
-# 正式 GUI 版：双击运行时只显示启动器窗口，不打开终端
+# 首次使用先安装 rsrc
+go install github.com/akavel/rsrc@latest
+
+# 在项目根目录执行，生成 Windows 图标资源
+& "$env:USERPROFILE\go\bin\rsrc.exe" -ico favicon.ico -o app_windows.syso
+```
+
+> 如果无法访问 Go 官方代理，可先设置代理后再安装：`$env:GOPROXY='https://goproxy.cn,direct'`。
+
+### 3. 编译正式版和调试版
+
+```powershell
+# 正式 GUI 版：双击运行时只显示启动器窗口，不打开 cmd 终端
 go build -ldflags "-H=windowsgui" -o MDOnline.exe .
 
 # 调试版：保留控制台窗口，便于查看启动错误和运行日志
@@ -252,10 +266,10 @@ go build -o MDOnline-console.exe .
 
 编译完成后会生成两个可执行文件：
 
-- `MDOnline.exe`：正式 GUI 版，内嵌静态资源，可单独分发；双击运行时不会打开终端窗口。
+- `MDOnline.exe`：正式 GUI 版，内嵌静态资源和程序图标，可单独分发；双击运行时不会打开 cmd 终端窗口。
 - `MDOnline-console.exe`：调试版，功能与正式版一致，但会显示控制台日志，适合排查启动失败、端口占用、文件读取异常等问题。
 
-> **注意**：每次修改 `index.html`、`style.css` 等前端文件后，需重新执行第 1 步同步到 `static/`，再重新编译，否则 exe 内嵌的仍是旧版本。
+> **注意**：每次修改 `index.html`、`style.css` 等前端文件后，需重新执行第 1 步同步到 `static/`，再重新编译，否则 exe 内嵌的仍是旧版本。只有更换 `favicon.ico` 时才需要重新执行第 2 步。
 
 ## 技术栈
 
