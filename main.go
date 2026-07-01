@@ -1,13 +1,15 @@
 // MDOnline - Zero-build Markdown documentation site launcher
 // All static files are embedded into the executable.
-// Double-click to run: auto-init docs, generate sidebar, start server, open browser.
+// Double-click to run: auto-init docs, generate sidebar, start server, show launcher.
 package main
 
 import (
 	"bufio"
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +19,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 )
 
 //go:embed all:static
@@ -39,7 +42,18 @@ var skipFiles = map[string]bool{
 	"README.md":   true,
 }
 
-const listenPort = ":8080"
+const listenPort = ":17621"
+
+var appLog = make(chan string, 256)
+
+func logf(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	select {
+	case appLog <- msg:
+	default:
+	}
+	log.Println(msg)
+}
 
 // === Initialization: extract embedded files if missing ===
 
@@ -53,7 +67,7 @@ func initWorkDir(baseDir string) {
 	}
 
 	if needsInit {
-		fmt.Println("First run: initializing docs directory...")
+		logf("First run: initializing docs directory...")
 	} else {
 		coreFiles := []string{"index.html", "style.css", "vue.css", "docsify.min.js", "search.min.js", "favicon.svg"}
 		for _, f := range coreFiles {
@@ -89,19 +103,19 @@ func initWorkDir(baseDir string) {
 
 		data, err := staticFiles.ReadFile(path)
 		if err != nil {
-			fmt.Printf("  Warning: cannot read embedded %s: %v\n", relPath, err)
+			logf("  Warning: cannot read embedded %s: %v", relPath, err)
 			return nil
 		}
 		if err := os.WriteFile(localPath, data, 0644); err != nil {
-			fmt.Printf("  Warning: cannot write %s: %v\n", localPath, err)
+			logf("  Warning: cannot write %s: %v", localPath, err)
 		} else {
-			fmt.Printf("  Created: %s\n", relPath)
+			logf("  Created: %s", relPath)
 		}
 		return nil
 	})
 
 	_ = imagesDir
-	fmt.Println("Initialization complete.")
+	logf("Initialization complete.")
 }
 
 // === Sidebar generation ===
@@ -133,7 +147,7 @@ func generateSidebar(baseDir string) string {
 
 	entries, err := os.ReadDir(docsDir)
 	if err != nil {
-		fmt.Printf("Warning: cannot read docs/ directory: %v\n", err)
+		logf("Warning: cannot read docs/ directory: %v", err)
 		return ""
 	}
 
@@ -245,19 +259,19 @@ func writeSidebar(baseDir, content string) error {
 func main() {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Println("Error: cannot determine executable path")
+		logf("Error: cannot determine executable path")
 		os.Exit(1)
 	}
 	baseDir := filepath.Dir(exePath)
 
 	initWorkDir(baseDir)
 
-	fmt.Println("Generating sidebar...")
+	logf("Generating sidebar...")
 	content := generateSidebar(baseDir)
 	if err := writeSidebar(baseDir, content); err != nil {
-		fmt.Printf("Warning: sidebar generation failed: %v\n", err)
+		logf("Warning: sidebar generation failed: %v", err)
 	} else {
-		fmt.Println("Sidebar generated.")
+		logf("Sidebar generated.")
 	}
 
 	mux := http.NewServeMux()
@@ -274,7 +288,7 @@ func main() {
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprint(w, "ok")
-		fmt.Println("Sidebar refreshed.")
+		logf("Sidebar refreshed.")
 	})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -290,7 +304,7 @@ func main() {
 
 		localPath := filepath.Join(baseDir, filepath.FromSlash(relPath))
 		if data, err := os.ReadFile(localPath); err == nil {
-			fmt.Printf("[200] local  %s\n", relPath)
+			logf("[200] local  %s", relPath)
 			w.Header().Set("Content-Type", mimeType(relPath))
 			w.Write(data)
 			return
@@ -300,14 +314,14 @@ func main() {
 			mdRelPath := relPath + ".md"
 			mdLocalPath := filepath.Join(baseDir, filepath.FromSlash(mdRelPath))
 			if data, err := os.ReadFile(mdLocalPath); err == nil {
-				fmt.Printf("[200] local  %s -> %s\n", relPath, mdRelPath)
+				logf("[200] local  %s -> %s", relPath, mdRelPath)
 				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 				w.Write(data)
 				return
 			}
 			mdEmbedPath := "static/" + filepath.ToSlash(mdRelPath)
 			if data, err := staticFiles.ReadFile(mdEmbedPath); err == nil {
-				fmt.Printf("[200] embed  %s -> %s\n", relPath, mdRelPath)
+				logf("[200] embed  %s -> %s", relPath, mdRelPath)
 				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 				w.Write(data)
 				return
@@ -316,19 +330,19 @@ func main() {
 
 		embedPath := "static/" + filepath.ToSlash(relPath)
 		if data, err := staticFiles.ReadFile(embedPath); err == nil {
-			fmt.Printf("[200] embed  %s\n", relPath)
+			logf("[200] embed  %s", relPath)
 			w.Header().Set("Content-Type", mimeType(relPath))
 			w.Write(data)
 			return
 		}
 
 		if filepath.Ext(relPath) != "" {
-			fmt.Printf("[404] %s\n", relPath)
+			logf("[404] %s", relPath)
 			http.NotFound(w, r)
 			return
 		}
 
-		fmt.Printf("[SPA] fallback %s -> index.html\n", relPath)
+		logf("[SPA] fallback %s -> index.html", relPath)
 		if data, err := os.ReadFile(filepath.Join(baseDir, "index.html")); err == nil {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(data)
@@ -340,19 +354,27 @@ func main() {
 			return
 		}
 
-		fmt.Printf("[404] %s\n", relPath)
+		logf("[404] %s", relPath)
 		http.NotFound(w, r)
 	})
 
 	url := "http://localhost" + listenPort
-	go openBrowser(url)
+	server := &http.Server{Addr: listenPort, Handler: mux}
 
-	fmt.Printf("MDOnline running at %s\n", url)
-	fmt.Println("Press Ctrl+C to stop.")
-	if err := http.ListenAndServe(listenPort, mux); err != nil {
-		fmt.Printf("Server error: %v\n", err)
-		os.Exit(1)
-	}
+	go func() {
+		logf("MDOnline running at %s", url)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logf("Server error: %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	runLauncher(baseDir, url, appLog, func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = server.Shutdown(ctx)
+		os.Exit(0)
+	})
 }
 
 func mimeType(path string) string {

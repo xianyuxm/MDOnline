@@ -53,19 +53,21 @@
 2. 双击运行，程序会自动：
    - 在同目录下创建 `docs/` 示例文档
    - 生成侧边栏导航
-   - 启动本地服务并打开浏览器 → [http://localhost:8080](http://localhost:8080)
+   - 启动本地文档服务 → [http://localhost:17621](http://localhost:17621)
+   - 显示本地启动器窗口，可打开文档、打开 `docs/` 文件夹、复制访问地址和查看运行日志
 3. 把你的 `.md` 文件放入 `docs/` 子目录中
 4. 点击页面右下角 **🔄 刷新按钮** 重新生成侧边栏，无需重启
 
 ```
 MDOnline.exe          ← 双击运行
+MDOnline-console.exe  ← 调试版，可查看控制台日志
 docs/                 ← 首次运行自动创建
   你的模块/
     文档一.md
     文档二.md
 ```
 
-> **退出**：关闭命令行窗口或按 `Ctrl+C` 停止服务。
+> **退出**：关闭 `MDOnline` 启动器窗口即可停止本地服务。正式版 `MDOnline.exe` 不会打开终端窗口；如需排查启动日志，可运行 `MDOnline-console.exe`。
 
 ---
 
@@ -118,7 +120,8 @@ python -m http.server 8080
 
 ```
 MDOnline/
-├── MDOnline.exe        # 单文件桌面版（双击运行，无需依赖）
+├── MDOnline.exe        # 正式 GUI 版（双击运行，不打开终端）
+├── MDOnline-console.exe # 调试版（显示控制台日志）
 ├── index.html          # 入口页面（Docsify 配置 + 插件）
 ├── style.css           # 双主题样式（暗黑 + 浅色）
 ├── vue.css             # Docsify 基础主题（勿删）
@@ -237,13 +240,20 @@ Copy-Item "images\*" -Destination "static\images\" -Force
 Copy-Item "docs\README.md" -Destination "static\docs\" -Force
 ```
 
-### 2. 编译
+### 2. 编译正式版和调试版
 
 ```powershell
-go build -o MDOnline.exe .
+# 正式 GUI 版：双击运行时只显示启动器窗口，不打开终端
+go build -ldflags "-H=windowsgui" -o MDOnline.exe .
+
+# 调试版：保留控制台窗口，便于查看启动错误和运行日志
+go build -o MDOnline-console.exe .
 ```
 
-编译完成后会生成约 10MB 的 `MDOnline.exe`，内嵌了所有静态资源，可单独分发。
+编译完成后会生成两个可执行文件：
+
+- `MDOnline.exe`：正式 GUI 版，内嵌静态资源，可单独分发；双击运行时不会打开终端窗口。
+- `MDOnline-console.exe`：调试版，功能与正式版一致，但会显示控制台日志，适合排查启动失败、端口占用、文件读取异常等问题。
 
 > **注意**：每次修改 `index.html`、`style.css` 等前端文件后，需重新执行第 1 步同步到 `static/`，再重新编译，否则 exe 内嵌的仍是旧版本。
 
