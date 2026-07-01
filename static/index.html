@@ -32,26 +32,290 @@
       },
       plugins: [
         function collapsibleSidebar(hook) {
+          var STORAGE_KEY = 'docsify-sidebar-groups';
+          var delegated = false;
+
+          function groupKey(trigger) {
+            return (trigger.textContent || '').trim();
+          }
+
+          function readState() {
+            try {
+              return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            } catch (e) {
+              return {};
+            }
+          }
+
+          function writeState(state) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          }
+
+          function ensureTrigger(item, childList) {
+            var trigger = item.querySelector(':scope > p, :scope > a');
+            if (trigger) return trigger;
+
+            var textNodes = [];
+            item.childNodes.forEach(function (node) {
+              if (node === childList) return;
+              if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                textNodes.push(node);
+              }
+            });
+            if (!textNodes.length) return null;
+
+            trigger = document.createElement('p');
+            trigger.textContent = textNodes.map(function (node) {
+              return node.textContent.trim();
+            }).join(' ');
+            item.insertBefore(trigger, childList);
+            textNodes.forEach(function (node) {
+              node.parentNode.removeChild(node);
+            });
+            return trigger;
+          }
+
+          function toggleGroup(trigger) {
+            var item = trigger && trigger.parentElement;
+            if (!item) return;
+            var state = readState();
+            item.classList.toggle('sidebar-group-collapsed');
+            state[groupKey(trigger)] = item.classList.contains('sidebar-group-collapsed');
+            writeState(state);
+          }
+
+          function bindDelegatedToggle() {
+            if (delegated) return;
+            delegated = true;
+            document.addEventListener('click', function (event) {
+              var trigger = event.target.closest('.sidebar-collapse-trigger');
+              var nav = document.querySelector('.sidebar-nav');
+              if (!trigger || !nav || !nav.contains(trigger)) return;
+              event.preventDefault();
+              event.stopPropagation();
+              toggleGroup(trigger);
+            }, true);
+            document.addEventListener('keydown', function (event) {
+              var trigger = event.target.closest && event.target.closest('.sidebar-collapse-trigger');
+              var nav = document.querySelector('.sidebar-nav');
+              if (!trigger || !nav || !nav.contains(trigger)) return;
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              event.stopPropagation();
+              toggleGroup(trigger);
+            }, true);
+          }
+
           hook.doneEach(function () {
+            bindDelegatedToggle();
+            var savedState = readState();
             document.querySelectorAll('.sidebar-nav li').forEach(function (item) {
               var childList = item.querySelector(':scope > ul');
-              var trigger = item.querySelector(':scope > p, :scope > a');
-              if (!childList || !trigger || trigger.dataset.collapseBound === 'true') { return; }
-              trigger.dataset.collapseBound = 'true';
+              var trigger = childList && ensureTrigger(item, childList);
+              if (!childList || !trigger) { return; }
               trigger.classList.add('sidebar-collapse-trigger');
               trigger.setAttribute('role', 'button');
               trigger.setAttribute('tabindex', '0');
-              trigger.addEventListener('click', function (event) {
-                event.preventDefault();
-                item.classList.toggle('sidebar-group-collapsed');
-              });
-              trigger.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  item.classList.toggle('sidebar-group-collapsed');
-                }
-              });
+              if (savedState[groupKey(trigger)] === true) {
+                item.classList.add('sidebar-group-collapsed');
+              }
             });
+          });
+        },
+
+        // --- IDEA-style sidebar pin/collapse + locate current page ---
+        function sidebarDockPlugin(hook) {
+          var COLLAPSE_KEY = 'docsify-sidebar-rail-collapsed';
+          var dockReady = false;
+
+          function isMobile() {
+            return window.matchMedia('(max-width: 768px)').matches;
+          }
+
+          function getActiveLink() {
+            return document.querySelector('.sidebar-nav li.active > a[href]');
+          }
+
+          function getActiveGroup(activeLink) {
+            var node = activeLink && activeLink.parentElement;
+            while (node && node.matches && node.matches('li')) {
+              if (node.querySelector(':scope > .sidebar-collapse-trigger')) {
+                return node;
+              }
+              var parentList = node.parentElement;
+              node = parentList && parentList.closest('li');
+            }
+            return null;
+          }
+
+          function getActiveGroupName() {
+            var activeLink = getActiveLink();
+            var group = getActiveGroup(activeLink);
+            var trigger = group && group.querySelector(':scope > .sidebar-collapse-trigger');
+            return trigger ? (trigger.textContent || '').trim() : '目录';
+          }
+
+          function readGroupState() {
+            try {
+              return JSON.parse(localStorage.getItem('docsify-sidebar-groups') || '{}');
+            } catch (e) {
+              return {};
+            }
+          }
+
+          function writeGroupState(state) {
+            localStorage.setItem('docsify-sidebar-groups', JSON.stringify(state));
+          }
+
+          function updateRailLabel() {
+            var label = document.getElementById('sidebar-rail-label');
+            if (label) {
+              label.textContent = getActiveGroupName();
+              label.title = '当前分组：' + getActiveGroupName();
+            }
+          }
+
+          function setCollapsed(collapsed) {
+            if (isMobile()) {
+              document.body.classList.remove('sidebar-rail-collapsed');
+              return;
+            }
+            document.body.classList.toggle('sidebar-rail-collapsed', collapsed);
+            localStorage.setItem(COLLAPSE_KEY, collapsed ? 'true' : 'false');
+            var toggle = document.getElementById('sidebar-dock-toggle');
+            if (toggle) {
+              toggle.title = collapsed ? '展开导航' : '收起导航';
+              toggle.setAttribute('aria-label', collapsed ? '展开导航' : '收起导航');
+            }
+          }
+
+          function expandActiveGroup(activeLink) {
+            var state = readGroupState();
+            var node = activeLink && activeLink.parentElement;
+            while (node && node.matches && node.matches('li')) {
+              var trigger = node.querySelector(':scope > .sidebar-collapse-trigger');
+              if (trigger) {
+                node.classList.remove('sidebar-group-collapsed');
+                state[(trigger.textContent || '').trim()] = false;
+              }
+              var parentList = node.parentElement;
+              node = parentList && parentList.closest('li');
+            }
+            writeGroupState(state);
+          }
+
+          function collapseAllGroups() {
+            var state = readGroupState();
+            document.querySelectorAll('.sidebar-nav li').forEach(function (item) {
+              var childList = item.querySelector(':scope > ul');
+              var trigger = item.querySelector(':scope > .sidebar-collapse-trigger');
+              if (!childList || !trigger) return;
+              item.classList.add('sidebar-group-collapsed');
+              state[(trigger.textContent || '').trim()] = true;
+            });
+            writeGroupState(state);
+            updateRailLabel();
+          }
+
+          function locateCurrentPage(flash) {
+            var activeLink = getActiveLink();
+            if (!activeLink) {
+              updateRailLabel();
+              return;
+            }
+            expandActiveGroup(activeLink);
+            if (!document.body.classList.contains('sidebar-rail-collapsed')) {
+              activeLink.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+            if (flash) {
+              activeLink.classList.remove('sidebar-current-flash');
+              window.setTimeout(function () {
+                activeLink.classList.add('sidebar-current-flash');
+              }, 40);
+            }
+            updateRailLabel();
+          }
+
+          function ensureDockControls() {
+            if (dockReady) return;
+            dockReady = true;
+
+            var toggle = document.createElement('button');
+            toggle.id = 'sidebar-dock-toggle';
+            toggle.type = 'button';
+            toggle.title = '收起导航';
+            toggle.setAttribute('aria-label', '收起导航');
+            document.body.appendChild(toggle);
+            toggle.addEventListener('click', function () {
+              setCollapsed(!document.body.classList.contains('sidebar-rail-collapsed'));
+            });
+
+            var rail = document.createElement('div');
+            rail.id = 'sidebar-rail';
+            rail.innerHTML =
+              '<button id="sidebar-rail-open" type="button" title="展开导航" aria-label="展开导航">☰</button>' +
+              '<button id="sidebar-rail-label" type="button" title="当前分组">目录</button>';
+            document.body.appendChild(rail);
+
+            rail.querySelector('#sidebar-rail-open').addEventListener('click', function () {
+              setCollapsed(false);
+            });
+            rail.querySelector('#sidebar-rail-label').addEventListener('click', function () {
+              setCollapsed(false);
+              window.setTimeout(function () { locateCurrentPage(true); }, 240);
+            });
+          }
+
+          function ensureSidebarToolButtons() {
+            var searchWrap = document.querySelector('.sidebar .search .input-wrap');
+            if (!searchWrap) return;
+
+            if (!document.getElementById('sidebar-locate-current')) {
+              var locateBtn = document.createElement('button');
+              locateBtn.id = 'sidebar-locate-current';
+              locateBtn.type = 'button';
+              locateBtn.title = '定位当前页';
+              locateBtn.setAttribute('aria-label', '定位当前页');
+              locateBtn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M2 12h3"></path><path d="M19 12h3"></path></svg>';
+              searchWrap.appendChild(locateBtn);
+              locateBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                setCollapsed(false);
+                window.setTimeout(function () { locateCurrentPage(true); }, 240);
+              });
+            }
+
+            if (!document.getElementById('sidebar-collapse-all')) {
+              var collapseBtn = document.createElement('button');
+              collapseBtn.id = 'sidebar-collapse-all';
+              collapseBtn.type = 'button';
+              collapseBtn.title = '收缩全部目录';
+              collapseBtn.setAttribute('aria-label', '收缩全部目录');
+              collapseBtn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path><path d="M4 12h16"></path></svg>';
+              searchWrap.appendChild(collapseBtn);
+              collapseBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                collapseAllGroups();
+              });
+            }
+          }
+
+          hook.mounted(function () {
+            ensureDockControls();
+            setCollapsed(localStorage.getItem(COLLAPSE_KEY) === 'true');
+            window.addEventListener('resize', function () {
+              setCollapsed(document.body.classList.contains('sidebar-rail-collapsed'));
+            });
+          });
+
+          hook.doneEach(function () {
+            ensureDockControls();
+            ensureSidebarToolButtons();
+            window.setTimeout(function () {
+              locateCurrentPage(false);
+            }, 80);
           });
         },
 
