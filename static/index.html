@@ -823,8 +823,8 @@
           });
         },
 
-        // --- PDF link interceptor: bypass Docsify hash routing ---
-        function pdfLinkPlugin(hook) {
+        // --- Standalone file link interceptor: bypass Docsify hash routing ---
+        function standaloneFileLinkPlugin(hook) {
           hook.mounted(function () {
             function currentDocDir() {
               var basePath = window.$$docsifyBasePath || '/';
@@ -844,7 +844,7 @@
               var link = e.target.closest('a[href]');
               if (!link) return;
               var href = link.getAttribute('href');
-              if (!href || !/\.pdf(?:[?#].*)?$/i.test(href)) return;
+              if (!href || !/\.(?:pdf|html)(?:[?#].*)?$/i.test(href)) return;
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
