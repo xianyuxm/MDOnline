@@ -743,6 +743,102 @@
           });
         },
 
+        // --- Code block copy button ---
+        function codeCopyPlugin(hook) {
+          var copyIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+          var checkIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+          var warningIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>';
+
+          function fallbackCopyText(text) {
+            return new Promise(function (resolve, reject) {
+              var textarea = document.createElement('textarea');
+              textarea.value = text;
+              textarea.setAttribute('readonly', 'readonly');
+              textarea.style.position = 'fixed';
+              textarea.style.top = '-1000px';
+              textarea.style.left = '-1000px';
+              textarea.style.opacity = '0';
+              document.body.appendChild(textarea);
+              textarea.select();
+              try {
+                if (document.execCommand('copy')) {
+                  resolve();
+                } else {
+                  reject(new Error('copy command failed'));
+                }
+              } catch (err) {
+                reject(err);
+              } finally {
+                document.body.removeChild(textarea);
+              }
+            });
+          }
+
+          function copyText(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              return navigator.clipboard.writeText(text).catch(function () {
+                return fallbackCopyText(text);
+              });
+            }
+
+            return fallbackCopyText(text);
+          }
+
+          function setButtonState(button, state) {
+            window.clearTimeout(button._codeCopyTimer);
+            button.classList.remove('copied', 'copy-failed');
+
+            if (state === 'copied') {
+              button.classList.add('copied');
+              button.innerHTML = checkIcon;
+              button.title = '复制成功';
+              button.setAttribute('aria-label', '复制成功');
+            } else if (state === 'failed') {
+              button.classList.add('copy-failed');
+              button.innerHTML = warningIcon;
+              button.title = '复制失败';
+              button.setAttribute('aria-label', '复制失败');
+            } else {
+              button.innerHTML = copyIcon;
+              button.title = '复制代码';
+              button.setAttribute('aria-label', '复制代码');
+              return;
+            }
+
+            button._codeCopyTimer = window.setTimeout(function () {
+              setButtonState(button, 'idle');
+            }, 1500);
+          }
+
+          function enhanceCodeBlocks() {
+            document.querySelectorAll('.markdown-section pre > code').forEach(function (code) {
+              var pre = code.parentElement;
+              if (!pre || pre.classList.contains('code-copy-ready')) return;
+              if ((pre.getAttribute('data-lang') || '').toLowerCase() === 'mermaid') return;
+              if (code.classList.contains('lang-mermaid')) return;
+
+              var button = document.createElement('button');
+              button.className = 'code-copy-button';
+              button.type = 'button';
+              setButtonState(button, 'idle');
+              button.addEventListener('click', function () {
+                copyText(code.textContent || '')
+                  .then(function () {
+                    setButtonState(button, 'copied');
+                  })
+                  .catch(function () {
+                    setButtonState(button, 'failed');
+                  });
+              });
+
+              pre.classList.add('code-copy-ready');
+              pre.appendChild(button);
+            });
+          }
+
+          hook.doneEach(enhanceCodeBlocks);
+        },
+
         // --- Normalize relative Markdown document links under /docs ---
         function relativeDocLinkPlugin(hook) {
           function splitRoute(route) {
